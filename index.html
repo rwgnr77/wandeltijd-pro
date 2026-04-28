@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1F2328" />
+  <meta name="apple-mobile-web-app-title" content="Wandeltijd Pro" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Wandeltijd Pro</title>
+  <link rel="icon" href="assets/iosApp.png" />
+  <link rel="apple-touch-icon" href="assets/iosApp.png" />
+
+  <style>
+    :root {
+      --canvas: #F5F6F7;
+      --surface: #FFFFFF;
+      --surface-2: #F1F3F5;
+      --line: #D9DEE5;
+      --line-soft: #E8EAED;
+      --text: #1F2328;
+      --muted: #6B7280;
+      --anthracite: #1F2328;
+      --dark: #12171D;
+      --dark-2: #2F3741;
+
+      --yellow: #FFC400;
+      --yellow-dark: #E0B800;
+      --yellow-soft: #FFF5CC;
+
+      --orange: #FF8A00;
+      --orange-soft: #FFE7C2;
+
+      --red: #E53935;
+      --red-soft: #FFE3E3;
+
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.07);
+      --radius: 18px;
+      --radius-small: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255, 196, 0, 0.08), transparent 30%),
+        var(--canvas);
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #12171D 0%, #1F2328 100%);
+      color: #fff;
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 10px 0 28px rgba(15, 23, 42, 0.12);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-summary {
+      margin-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      padding-top: 18px;
+      color: rgba(255,255,255,0.84);
+      font-size: 0.92rem;
+    }
+
+    .sidebar-summary strong {
+      display: block;
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar-summary span {
+      display: block;
+      color: rgba(255,255,255,0.68);
+      line-height: 1.45;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      font-size: 1.18rem;
+      min-width: 0;
+    }
+
+    .brand .pro,
+    .wordmark .pro {
+      color: var(--yellow);
+    }
+
+    .logo-mark {
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      display: block;
+    }
+
+    .top-logo .logo-mark {
+      width: 50px;
+      height: 50px;
+    }
+
+    .logo-mark.on-dark svg {
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));
+    }
+
+
+    /* Vaste logo-afbeeldingen */
+    .brand-logo,
+    .topbar-logo,
+    .mobile-logo,
+    .result-icon {
+      display: block;
+      object-fit: contain;
+    }
+
+    .brand-logo {
+      width: 100%;
+      max-width: 178px;
+      height: auto;
+    }
+
+    .topbar-logo {
+      width: min(520px, 100%);
+      height: auto;
+      max-height: 84px;
+    }
+
+    .mobile-logo {
+      width: auto;
+      max-width: 210px;
+      height: 34px;
+    }
+
+    .result-icon {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav a {
+      color: rgba(255,255,255,0.82);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      font-weight: 750;
+      font-size: 0.95rem;
+    }
+
+    .nav a.active {
+      background: var(--yellow);
+      color: #111;
+      box-shadow: 0 6px 18px rgba(255, 196, 0, 0.28);
+    }
+
+    .nav svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+    }
+
+    .tip-card {
+      margin-top: auto;
+      border: 1px solid rgba(255, 196, 0, 0.32);
+      background: rgba(255, 255, 255, 0.045);
+      border-radius: 16px;
+      padding: 15px;
+      color: rgba(255,255,255,0.9);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .tip-card strong {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .tip-card p {
+      margin: 0;
+      color: rgba(255,255,255,0.78);
+      font-size: 0.88rem;
+    }
+
+    .tip-card .more {
+      display: inline-block;
+      margin-top: 10px;
+      color: var(--yellow);
+      font-weight: 900;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .user {
+      border-top: 1px solid rgba(255,255,255,0.14);
+      padding-top: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.88rem;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #3A4047;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .main {
+      padding: 24px;
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .top-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .wordmark {
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      font-weight: 950;
+      letter-spacing: -0.055em;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      min-height: 42px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn.primary {
+      background: var(--yellow);
+      border-color: var(--yellow);
+      color: #101418;
+      box-shadow: 0 8px 18px rgba(255, 196, 0, 0.27);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line-soft);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: clamp(1.75rem, 4vw, 2.2rem);
+      letter-spacing: -0.04em;
+      font-weight: 950;
+    }
+
+    .subtitle {
+      margin: 4px 0 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .planner-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 0.92fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      font-weight: 950;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 950;
+    }
+
+    .step.yellow { background: var(--yellow); color: #101418; }
+    .step.orange { background: var(--orange); color: #101418; }
+    .step.red { background: var(--red); color: white; }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      border: 1px solid var(--line-soft);
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      color: #4B5563;
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      min-height: 38px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      font-weight: 760;
+      text-align: left;
+    }
+
+    input[type="time"]::-webkit-date-and-time-value {
+      text-align: left;
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgba(255, 196, 0, 0.28);
+      border-color: var(--yellow);
+    }
+
+    .input-unit {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .unit {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.78rem;
+      text-align: right;
+    }
+
+    .tempo-card {
+      margin-top: 12px;
+      border: 1px solid var(--line-soft);
+      border-left: 5px solid var(--yellow);
+      border-radius: var(--radius-small);
+      padding: 13px;
+      background: #fff;
+    }
+
+    .tempo-card[data-color="orange"] { border-left-color: var(--orange); }
+    .tempo-card[data-color="red"] { border-left-color: var(--red); }
+
+    .tempo-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .tempo-title {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 950;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--yellow);
+      flex: 0 0 auto;
+    }
+
+    .dot.orange { background: var(--orange); }
+    .dot.red { background: var(--red); }
+
+    .tempo-desc {
+      display: block;
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      background: var(--yellow-soft);
+      color: #8A6A00;
+      white-space: nowrap;
+    }
+
+    .badge.orange {
+      background: var(--orange-soft);
+      color: #A34F00;
+    }
+
+    .badge.red {
+      background: var(--red-soft);
+      color: #B42318;
+    }
+
+    .optional-toggle {
+      width: 100%;
+      margin-top: 12px;
+      border: 1px dashed #B8C0CC;
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 15px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      text-align: left;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .optional-toggle:hover {
+      border-color: var(--yellow-dark);
+      background: #FFFCF0;
+    }
+
+    .plus {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid #9AA3AF;
+      font-size: 1.3rem;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .optional-toggle strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .optional-toggle span:last-child {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .extra-tempos {
+      display: none;
+    }
+
+    .extra-tempos.visible {
+      display: block;
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .unit-toggle {
+      display: flex;
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface-2);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .unit-toggle button {
+      border: 0;
+      background: transparent;
+      padding: 6px 9px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .unit-toggle button.active {
+      background: white;
+      color: var(--text);
+    }
+
+    .result-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-card {
+      border: 1px solid var(--line-soft);
+      border-left: 5px solid var(--yellow);
+      border-radius: var(--radius-small);
+      background: #fff;
+      padding: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .result-card[data-color="orange"] {
+      border-left-color: var(--orange);
+    }
+
+    .result-card[data-color="red"] {
+      border-left-color: var(--red);
+    }
+
+    .result-card.optional {
+      background:
+        linear-gradient(90deg, rgba(255,255,255,1), rgba(255,255,255,0.92)),
+        repeating-linear-gradient(45deg, transparent 0 10px, rgba(31,35,40,0.025) 10px 12px);
+    }
+
+    .result-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .mini-logo {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+    }
+
+    .result-title {
+      font-weight: 950;
+      font-size: 1.04rem;
+    }
+
+    .result-sub {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .big-time {
+      text-align: right;
+    }
+
+    .big-time strong {
+      display: block;
+      font-size: clamp(1.8rem, 5vw, 2.45rem);
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .big-time span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .result-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .meta-item {
+      border-right: 1px solid var(--line-soft);
+      padding-right: 8px;
+    }
+
+    .meta-item:last-child {
+      border-right: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .meta-value {
+      font-weight: 950;
+      margin-top: 2px;
+    }
+
+    .insight {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+      border: 1px solid var(--line-soft);
+      background: #fff;
+      border-radius: var(--radius-small);
+      padding: 12px;
+    }
+
+    .error {
+      display: none;
+      margin-bottom: 12px;
+      border: 1px solid #FECACA;
+      background: #FFF1F1;
+      color: #B42318;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 850;
+    }
+
+    .error.visible { display: block; }
+
+    .pending-note {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid rgba(255, 196, 0, 0.45);
+      background: var(--yellow-soft);
+      color: #7A5D00;
+      border-radius: 12px;
+      padding: 9px 11px;
+      font-size: 0.84rem;
+      font-weight: 850;
+    }
+
+    .pending-note.visible {
+      display: block;
+    }
+
+    .mobile-topbar {
+      display: none;
+      background: var(--dark);
+      color: #fff;
+      padding: env(safe-area-inset-top) 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.15);
+    }
+
+    .mobile-top-inner {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mobile-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 950;
+      letter-spacing: -0.03em;
+    }
+
+    .mobile-brand .logo-mark {
+      width: 36px;
+      height: 36px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .mobile-topbar {
+        display: block;
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .topbar {
+        display: none;
+      }
+
+      .hero-card {
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .planner-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .actions {
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        min-height: 40px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .field-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .field {
+        padding: 9px;
+      }
+
+      input, select {
+        min-height: 36px;
+        padding: 7px 8px;
+        font-size: 0.9rem;
+      }
+
+      .tempo-card {
+        padding: 11px;
+      }
+
+      .result-head {
+        grid-template-columns: auto 1fr;
+      }
+
+      .big-time {
+        grid-column: 1 / -1;
+        text-align: left;
+        padding-left: 54px;
+      }
+
+      .result-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .meta-item {
+        border-right: 0;
+        border-bottom: 1px solid var(--line-soft);
+        padding: 0 0 8px;
+      }
+
+      .meta-item:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mobile-topbar">
+    <div class="mobile-top-inner simple">
+      <div class="mobile-brand">
+        <img class="mobile-logo" src="assets/blacklogo.png" alt="Wandeltijd Pro">
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-logo" src="assets/blacklogo.png" alt="Wandeltijd Pro">
+      </div>
+
+      <div class="sidebar-summary">
+        <strong>Wandelplanner</strong>
+        <span>Bereken je aankomsttijd op basis van afstand, tempo, pauze en reistijd.</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="top-logo">
+          <img class="topbar-logo" src="assets/mainlogo.png" alt="Wandeltijd Pro">
+        </div>
+      </div>
+
+      <section class="hero-card">
+        <h1 class="page-title">Wandelplanner</h1>
+        <p class="subtitle">Vul je afstand, vertrek, pauze en tempo in. Druk op Bereken en je aankomsttijd verschijnt.</p>
+
+        <div id="error" class="error"></div>
+
+        <div class="planner-grid">
+          <section class="panel" aria-label="Instellingen">
+            <h2>
+              <span class="section-label"><span class="step">1</span> Instellingen</span>
+              <span class="unit-toggle" aria-label="Tempo-invoer">
+                <button id="inputPace" class="active" type="button">min/km</button>
+                <button id="inputSpeed" type="button">km/u</button>
+              </span>
+            </h2>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="distance">Afstand</label>
+                <div class="input-unit">
+                  <input id="distance" type="number" inputmode="decimal" min="0" step="0.1" value="21" />
+                  <span class="unit">km</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="startTime">Vertrek</label>
+                <input id="startTime" type="time" value="10:02" />
+              </div>
+
+              <div class="field">
+                <label for="pauseMinutes">Rust / pauze totaal</label>
+                <div class="input-unit">
+                  <input id="pauseMinutes" type="number" inputmode="numeric" min="0" step="5" value="90" />
+                  <span class="unit">min</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="travelMinutes">Reistijd</label>
+                <div class="input-unit">
+                  <input id="travelMinutes" type="number" inputmode="numeric" min="0" step="5" value="0" />
+                  <span class="unit">min</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="pendingNote" class="pending-note">Je hebt iets aangepast. Druk op <strong>Bereken</strong> om de tijden te vernieuwen.</div>
+
+            <div class="tempo-card" data-color="yellow">
+              <div class="tempo-head">
+                <div class="tempo-title">
+                  <span class="dot"></span>
+                  <div>
+                    Tempo 1
+                    <span class="tempo-desc">Standaard tempo</span>
+                  </div>
+                </div>
+                <span class="badge">Standaard</span>
+              </div>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="pace1">Tempo / snelheid</label>
+                  <input id="pace1" type="text" inputmode="decimal" value="12:00" />
+                  <div id="paceUnit1" class="unit" style="text-align:left;margin-top:4px">min/km</div>
+                </div>
+
+                <div class="field">
+                  <label for="label1">Naam</label>
+                  <input id="label1" type="text" value="Tempo 1" />
+                </div>
+              </div>
+            </div>
+
+            <button id="toggleExtra" class="optional-toggle" type="button" aria-expanded="false">
+              <span class="plus">+</span>
+              <span>
+                <strong>Tempo 2 en 3 toevoegen</strong>
+                <span>Vergelijk meerdere scenario’s en kies wat het beste bij je past.</span>
+              </span>
+            </button>
+
+            <div id="extraTempos" class="extra-tempos">
+              <div class="tempo-card" data-color="orange">
+                <div class="tempo-head">
+                  <div class="tempo-title">
+                    <span class="dot orange"></span>
+                    <div>
+                      Tempo 2
+                      <span class="tempo-desc">Optioneel scenario</span>
+                    </div>
+                  </div>
+                  <span class="badge orange">Optioneel</span>
+                </div>
+
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="pace2">Tempo / snelheid</label>
+                    <input id="pace2" type="text" inputmode="decimal" value="12:30" />
+                    <div id="paceUnit2" class="unit" style="text-align:left;margin-top:4px">min/km</div>
+                  </div>
+
+                  <div class="field">
+                    <label for="label2">Naam</label>
+                    <input id="label2" type="text" value="Tempo 2" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="tempo-card" data-color="red">
+                <div class="tempo-head">
+                  <div class="tempo-title">
+                    <span class="dot red"></span>
+                    <div>
+                      Tempo 3
+                      <span class="tempo-desc">Optioneel scenario</span>
+                    </div>
+                  </div>
+                  <span class="badge red">Optioneel</span>
+                </div>
+
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="pace3">Tempo / snelheid</label>
+                    <input id="pace3" type="text" inputmode="decimal" value="11:30" />
+                    <div id="paceUnit3" class="unit" style="text-align:left;margin-top:4px">min/km</div>
+                  </div>
+
+                  <div class="field">
+                    <label for="label3">Naam</label>
+                    <input id="label3" type="text" value="Tempo 3" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-row">
+              <button id="resetBtn" class="btn" type="button">↺ Reset invoer</button>
+              <button id="calculateBtn" class="btn primary" type="button">Bereken</button>
+            </div>
+          </section>
+
+          <section class="panel" aria-label="Resultaten">
+            <h2>
+              <span class="section-label"><span class="step">2</span> Resultaten</span>
+              <span class="unit-toggle" aria-label="Weergave">
+                <button id="showPace" class="active" type="button">min/km</button>
+                <button id="showSpeed" type="button">km/u</button>
+              </span>
+            </h2>
+
+            <div id="results" class="result-list"></div>
+
+            <div class="insight">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span><strong style="color:var(--text)">Vergelijk je tempo’s.</strong><br>Pas je tempo of pauzes aan om het effect op je aankomsttijd te zien.</span>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+<script>
+    const defaults = {
+      distance: "21",
+      startTime: "10:02",
+      pauseMinutes: "90",
+      travelMinutes: "0",
+      pace1: "12:00",
+      pace2: "12:30",
+      pace3: "11:30",
+      label1: "Tempo 1",
+      label2: "Tempo 2",
+      label3: "Tempo 3"
+    };
+
+    const ids = Object.keys(defaults);
+    let showExtra = false;
+    let displayMode = "pace";
+    let tempoInputMode = "pace";
+    let hasCalculated = false;
+    let isDirty = false;
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function fillLogos() {
+      // Logo's worden nu als vaste PNG-afbeeldingen geladen.
+    }
+
+    function parseNumber(value) {
+      if (typeof value !== "string") value = String(value);
+      return Number(value.replace(",", "."));
+    }
+
+    function parsePace(value) {
+      const clean = String(value).trim().replace(",", ":").replace(".", ":");
+      const parts = clean.split(":");
+
+      if (parts.length === 1) {
+        const minutes = Number(parts[0]);
+        if (!Number.isFinite(minutes) || minutes <= 0) return null;
+        return minutes;
+      }
+
+      if (parts.length !== 2) return null;
+
+      const minutes = Number(parts[0]);
+      const seconds = Number(parts[1]);
+
+      if (
+        !Number.isFinite(minutes) ||
+        !Number.isFinite(seconds) ||
+        minutes <= 0 ||
+        seconds < 0 ||
+        seconds >= 60
+      ) {
+        return null;
+      }
+
+      return minutes + seconds / 60;
+    }
+
+    function parseSpeed(value) {
+      const speed = parseNumber(value);
+      if (!Number.isFinite(speed) || speed <= 0) return null;
+      return 60 / speed;
+    }
+
+    function parseTempoInput(value) {
+      return tempoInputMode === "pace" ? parsePace(value) : parseSpeed(value);
+    }
+
+    function formatSpeedInputFromPace(pace) {
+      return (60 / pace).toFixed(1).replace(".", ",");
+    }
+
+    function formatPaceInputFromSpeed(speedText) {
+      const pace = parseSpeed(speedText);
+      if (!pace) return "";
+      const totalSeconds = Math.round(pace * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function convertTempoInputs(newMode) {
+      if (newMode === tempoInputMode) return;
+
+      ["pace1", "pace2", "pace3"].forEach(id => {
+        const field = el(id);
+        const current = field.value.trim();
+        if (!current) return;
+
+        if (tempoInputMode === "pace" && newMode === "speed") {
+          const pace = parsePace(current);
+          if (pace) field.value = formatSpeedInputFromPace(pace);
+        } else if (tempoInputMode === "speed" && newMode === "pace") {
+          const converted = formatPaceInputFromSpeed(current);
+          if (converted) field.value = converted;
+        }
+      });
+
+      tempoInputMode = newMode;
+
+      ["1", "2", "3"].forEach(n => {
+        const unit = el(`paceUnit${n}`);
+        if (unit) unit.textContent = tempoInputMode === "pace" ? "min/km" : "km/u";
+      });
+
+      el("inputPace").classList.toggle("active", tempoInputMode === "pace");
+      el("inputSpeed").classList.toggle("active", tempoInputMode === "speed");
+
+      markDirty();
+    }
+
+    function formatPace(value) {
+      const totalSeconds = Math.round(value * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")} min/km`;
+    }
+
+    function formatSpeedFromPace(pace) {
+      const speed = 60 / pace;
+      return `${speed.toFixed(1).replace(".", ",")} km/u`;
+    }
+
+    function formatDuration(totalMinutes) {
+      const rounded = Math.round(totalMinutes);
+      const hours = Math.floor(rounded / 60);
+      const minutes = rounded % 60;
+      return `${hours}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    function parseTimeToMinutes(time) {
+      const parts = String(time).split(":");
+      if (parts.length !== 2) return null;
+
+      const hours = Number(parts[0]);
+      const minutes = Number(parts[1]);
+
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+      return hours * 60 + minutes;
+    }
+
+    function formatClock(minutesFromMidnight) {
+      const total = ((Math.round(minutesFromMidnight) % 1440) + 1440) % 1440;
+      const hours = Math.floor(total / 60);
+      const minutes = total % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    function setError(message) {
+      const box = el("error");
+      if (!message) {
+        box.textContent = "";
+        box.classList.remove("visible");
+        return;
+      }
+      box.textContent = message;
+      box.classList.add("visible");
+    }
+
+    function tempoData() {
+      const base = [
+        {
+          key: 1,
+          label: el("label1").value.trim() || "Tempo 1",
+          pace: parseTempoInput(el("pace1").value),
+          color: "yellow",
+          colorName: "yellow",
+          subtitle: "Standaard scenario",
+          optional: false
+        }
+      ];
+
+      if (showExtra) {
+        base.push(
+          {
+            key: 2,
+            label: el("label2").value.trim() || "Tempo 2",
+            pace: parseTempoInput(el("pace2").value),
+            color: "orange",
+            colorName: "orange",
+            subtitle: "Optioneel scenario",
+            optional: true
+          },
+          {
+            key: 3,
+            label: el("label3").value.trim() || "Tempo 3",
+            pace: parseTempoInput(el("pace3").value),
+            color: "red",
+            colorName: "red",
+            subtitle: "Optioneel scenario",
+            optional: true
+          }
+        );
+      }
+
+      return base;
+    }
+
+    function resultCard(item, distance, pauseMinutes, travelMinutes, startMinutes) {
+      const walkingMinutes = distance * item.pace;
+      const totalMinutes = walkingMinutes + pauseMinutes + travelMinutes;
+      const endMinutes = startMinutes + totalMinutes;
+      const tempoDisplay = displayMode === "pace" ? formatPace(item.pace) : formatSpeedFromPace(item.pace);
+      const optionalBadge = item.optional ? `<span class="badge ${item.color === "yellow" ? "" : item.color}">Optioneel</span>` : "";
+
+      return `
+        <article class="result-card ${item.optional ? "optional" : ""}" data-color="${item.color}">
+          <div class="result-head">
+            <img class="result-icon" src="assets/compact.png" alt="">
+            <div>
+              <div class="result-title">${escapeHtml(item.label)}</div>
+              <div class="result-sub">${escapeHtml(item.subtitle)} ${optionalBadge}</div>
+            </div>
+            <div class="big-time">
+              <span>Totale wandeltijd</span>
+              <strong>${formatDuration(totalMinutes)}</strong>
+              <span>uur</span>
+            </div>
+          </div>
+
+          <div class="result-meta">
+            <div class="meta-item">
+              <div class="meta-label">${displayMode === "pace" ? "Tempo" : "Snelheid"}</div>
+              <div class="meta-value">${tempoDisplay}</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Lopen</div>
+              <div class="meta-value">${formatDuration(walkingMinutes)} uur</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Aankomst</div>
+              <div class="meta-value">${formatClock(endMinutes)}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function markDirty() {
+      if (!hasCalculated) return;
+      isDirty = true;
+      const note = el("pendingNote");
+      if (note) note.classList.add("visible");
+    }
+
+    function clearDirty() {
+      isDirty = false;
+      const note = el("pendingNote");
+      if (note) note.classList.remove("visible");
+    }
+
+    function calculate() {
+      const distance = parseNumber(el("distance").value);
+      const pauseMinutes = parseNumber(el("pauseMinutes").value);
+      const travelMinutes = parseNumber(el("travelMinutes").value);
+      const startMinutes = parseTimeToMinutes(el("startTime").value);
+      const tempos = tempoData();
+
+      if (!Number.isFinite(distance) || distance <= 0) return setError("Vul een geldige afstand in.");
+      if (!Number.isFinite(pauseMinutes) || pauseMinutes < 0) return setError("Vul een geldige pauzeduur in.");
+      if (!Number.isFinite(travelMinutes) || travelMinutes < 0) return setError("Vul een geldige reistijd in.");
+      if (startMinutes === null) return setError("Vul een geldige vertrektijd in.");
+      if (tempos.some(t => !t.pace)) return setError(tempoInputMode === "pace" ? "Vul tempo’s in als mm:ss, bijvoorbeeld 12:00." : "Vul snelheden in als km/u, bijvoorbeeld 5,0.");
+
+      setError("");
+      hasCalculated = true;
+      clearDirty();
+
+      el("results").innerHTML = tempos
+        .map(item => resultCard(item, distance, pauseMinutes, travelMinutes, startMinutes))
+        .join("");
+
+      fillLogos();
+    }
+
+    function toggleExtra() {
+      showExtra = !showExtra;
+      const extra = el("extraTempos");
+      const button = el("toggleExtra");
+      extra.classList.toggle("visible", showExtra);
+      button.setAttribute("aria-expanded", showExtra ? "true" : "false");
+      button.querySelector(".plus").textContent = showExtra ? "−" : "+";
+      button.querySelector("strong").textContent = showExtra ? "Tempo 2 en 3 verbergen" : "Tempo 2 en 3 toevoegen";
+      markDirty();
+    }
+
+    function resetAll() {
+      ids.forEach(id => el(id).value = defaults[id]);
+
+      showExtra = false;
+      const extra = el("extraTempos");
+      const button = el("toggleExtra");
+      extra.classList.remove("visible");
+      button.setAttribute("aria-expanded", "false");
+      button.querySelector(".plus").textContent = "+";
+      button.querySelector("strong").textContent = "Tempo 2 en 3 toevoegen";
+
+      tempoInputMode = "pace";
+      ["1", "2", "3"].forEach(n => {
+        const unit = el(`paceUnit${n}`);
+        if (unit) unit.textContent = "min/km";
+      });
+      el("inputPace").classList.add("active");
+      el("inputSpeed").classList.remove("active");
+
+      el("results").innerHTML = "";
+      hasCalculated = false;
+      clearDirty();
+      setError("");
+    }
+
+    function setDisplayMode(mode) {
+      displayMode = mode;
+      el("showPace").classList.toggle("active", mode === "pace");
+      el("showSpeed").classList.toggle("active", mode === "speed");
+      if (!hasCalculated) return;
+      if (isDirty) return;
+      calculate();
+    }
+
+    function startApp() {
+      fillLogos();
+
+      ids.forEach(id => {
+        el(id).addEventListener("input", markDirty);
+        el(id).addEventListener("change", markDirty);
+      });
+
+      el("toggleExtra").addEventListener("click", toggleExtra);
+      el("resetBtn").addEventListener("click", resetAll);
+      el("calculateBtn").addEventListener("click", calculate);
+      el("showPace").addEventListener("click", () => setDisplayMode("pace"));
+      el("showSpeed").addEventListener("click", () => setDisplayMode("speed"));
+      el("inputPace").addEventListener("click", () => convertTempoInputs("pace"));
+      el("inputSpeed").addEventListener("click", () => convertTempoInputs("speed"));
+
+      el("results").innerHTML = `
+        <div class="insight" style="margin-top:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span><strong style="color:var(--text)">Nog geen berekening.</strong><br>Vul je gegevens in en druk op <strong>Bereken</strong>.</span>
+        </div>
+      `;
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startApp);
+    } else {
+      startApp();
+    }
+  </script>
+</body>
+</html>
